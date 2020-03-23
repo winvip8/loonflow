@@ -1930,7 +1930,18 @@ class TicketBaseService(BaseService):
                 if len(approver.split(',')) > 1:
                     destination_participant_type_id = constant_service_ins.PARTICIPANT_TYPE_MULTI
                 destination_participant = approver
+            elif participant == 'creator_tl2': 
+                # 获取用户的上两级部门tl或审批人(优先审批人) 
+                flag, approver = account_base_service_ins.get_user_dept2_approver(creator)
+                if flag is False:
+                    return False, approver
 
+                destination_participant_type_id = constant_service_ins.PARTICIPANT_TYPE_PERSONAL
+                if len(approver.split(',')) > 1:
+                    destination_participant_type_id = constant_service_ins.PARTICIPANT_TYPE_MULTI
+                destination_participant = approver
+                
+                
         elif participant_type_id == constant_service_ins.PARTICIPANT_TYPE_HOOK:
             destination_participant = '***'  # 敏感数据，不保存工单基础表中
 
