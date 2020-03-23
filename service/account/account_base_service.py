@@ -183,7 +183,27 @@ class AccountBaseService(BaseService):
             return True, loon_dept_obj.approver
         else:
             return True, loon_dept_obj.leader
+        
+    @classmethod
+    @auto_log
+    def get_user_dept2_approver(cls, username):
+        """
+        by yao 20200316
+        获取用户的所在部门上一层部门的审批人，优先获取审批人，如果没有取tl
+        :param username:
+        :return:
+        """
+        user_obj = LoonUser.objects.filter(username=username, is_deleted=0).first()
 
+        loon_dept_obj1 = LoonDept.objects.filter(id=user_obj.dept_id).first()
+        loon_dept_obj2 = LoonDept.objects.filter(id=loon_dept_obj1.parent_dept_id).first()
+
+        if loon_dept_obj2.approver:
+            return loon_dept_obj2.approver, ''
+        else:
+            return loon_dept_obj2.leader, ''
+        
+        
     @classmethod
     @auto_log
     def get_dept_sub_dept_id_list(cls, dept_id: int)->tuple:
