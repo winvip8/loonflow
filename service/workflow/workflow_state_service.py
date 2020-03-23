@@ -267,6 +267,8 @@ class WorkflowStateService(BaseService):
                 participant_alias = '工单创建人'
             elif participant_name == 'creator_tl':
                 participant_alias = '工单创建人的tl'
+            elif participant_name == 'creator_tl2':
+                participant_alias = '工单创建人的2级tl'                 
         elif participant_type_id == constant_service_ins.PARTICIPANT_TYPE_ROBOT:
             if participant:
                 flag, result = workflow_run_script_service_ins.get_run_script_by_id(int(participant))
