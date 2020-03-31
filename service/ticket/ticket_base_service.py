@@ -1153,6 +1153,7 @@ class TicketBaseService(BaseService):
         ticket_obj.multi_all_person = multi_all_person
         if destination_state.type_id == constant_service_ins.STATE_TYPE_END:                #结束 
             ticket_obj.act_state_id = constant_service_ins.TICKET_ACT_STATE_FINISH  #已完成
+            TicketUser.objects.filter(ticket_id=ticket_id).all().update(in_process=False)   #更新工单用户状态表->所有记录设置为完成状态
         elif destination_state.type_id == constant_service_ins.STATE_TYPE_START:            #开始
             ticket_obj.act_state_id = constant_service_ins.TICKET_ACT_STATE_DRAFT   #草稿
         else:
@@ -1161,6 +1162,7 @@ class TicketBaseService(BaseService):
         if req_transition_obj.attribute_type_id == constant_service_ins.TRANSITION_ATTRIBUTE_TYPE_REFUSE:   #拒绝
             #ticket_obj.act_state_id = constant_service_ins.TICKET_ACT_STATE_BACK
             ticket_obj.act_state_id = constant_service_ins.TICKET_ACT_STATE_RETREAT #撤回
+            TicketUser.objects.filter(ticket_id=ticket_id).all().update(in_process=False)   #更新工单用户状态表->所有记录设置为完成状态。
 
         ticket_obj.save()
         # 更新工单信息：基础字段及自定义字段， add_relation字段 需要考虑下个处理人是部门、角色等的情况
