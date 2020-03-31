@@ -154,7 +154,7 @@ class TicketBaseService(BaseService):
             query_params &= relation_query_expression
             ticket_objects = TicketRecord.objects.filter(query_params).order_by(order_by_str)
         elif category == 'worked':
-            worked_query_expression = Q(ticketuser__username=username, worked=True)
+            worked_query_expression = Q(ticketuser__username=username, ticketuser__in_process=False)
             query_params &= worked_query_expression
             ticket_objects = TicketRecord.objects.filter(query_params).order_by(order_by_str)
         else:
@@ -1151,15 +1151,16 @@ class TicketBaseService(BaseService):
         ticket_obj.participant_type_id = destination_participant_type_id
         ticket_obj.participant = destination_participant
         ticket_obj.multi_all_person = multi_all_person
-        if destination_state.type_id == constant_service_ins.STATE_TYPE_END:
-            ticket_obj.act_state_id = constant_service_ins.TICKET_ACT_STATE_FINISH
-        elif destination_state.type_id == constant_service_ins.STATE_TYPE_START:
-            ticket_obj.act_state_id = constant_service_ins.TICKET_ACT_STATE_DRAFT
+        if destination_state.type_id == constant_service_ins.STATE_TYPE_END:                #结束 
+            ticket_obj.act_state_id = constant_service_ins.TICKET_ACT_STATE_FINISH  #已完成
+        elif destination_state.type_id == constant_service_ins.STATE_TYPE_START:            #开始
+            ticket_obj.act_state_id = constant_service_ins.TICKET_ACT_STATE_DRAFT   #草稿
         else:
             ticket_obj.act_state_id = constant_service_ins.TICKET_ACT_STATE_ONGOING
 
-        if req_transition_obj.attribute_type_id == constant_service_ins.TRANSITION_ATTRIBUTE_TYPE_REFUSE:
-            ticket_obj.act_state_id = constant_service_ins.TICKET_ACT_STATE_BACK
+        if req_transition_obj.attribute_type_id == constant_service_ins.TRANSITION_ATTRIBUTE_TYPE_REFUSE:   #拒绝
+            #ticket_obj.act_state_id = constant_service_ins.TICKET_ACT_STATE_BACK
+            ticket_obj.act_state_id = constant_service_ins.TICKET_ACT_STATE_RETREAT #撤回
 
         ticket_obj.save()
         # 更新工单信息：基础字段及自定义字段， add_relation字段 需要考虑下个处理人是部门、角色等的情况
@@ -1276,7 +1277,7 @@ class TicketBaseService(BaseService):
         ticket_obj.save()
 
         # ticket user table, for ticket list query
-        if ticket_creator:
+        if ticket_creator:  #新工单直接增加
             # if ticket_creator is not null, is mean new ticket, should add creator
             new_record = TicketUser(ticket_id=ticket_id, username=ticket_creator)
             new_record.save()
@@ -1284,10 +1285,12 @@ class TicketBaseService(BaseService):
         user_str_list = user_str.split(',')
 
         existed_record_queryset = TicketUser.objects.filter(ticket_id=ticket_id, username__in=user_str_list).all()
+        
         user_need_update_list = [existed_record.username for existed_record in existed_record_queryset]
         user_need_add_list = [user_str for user_str in user_str_list if user_str not in user_need_update_list]
 
         TicketUser.objects.filter(ticket_id=ticket_id, username__in=user_need_update_list).update(in_process=True)
+        
         insert_list = []
         for user_need_add in user_need_add_list:
             insert_list.append(TicketUser(ticket_id=ticket_id, username=user_need_add, in_process=True))
